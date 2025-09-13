@@ -1,6 +1,7 @@
 # Archon
 <sup>/ˈɑːr.kɒn/ -> “AR-kon”, "Ark-on", "Ar-chon"</sup><br/>
-> [!WARNING] This is still under development, use any source code at your own risk.
+> [!WARNING]
+> This is still under development, use any source code at your own risk.
 
 During my time as an admin for a few Discord servers, and as a perfectionist, I always had the problem of not having enough customization, control, and/or configuration when trying to use a bot for the servers needs. And, even if I did, it would usually be behind a pay wall or the feature was limited to only a few uses/implementations.
 
