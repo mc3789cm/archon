@@ -1,0 +1,61 @@
+# IDE settings
+.spyproject/
+.settings/
+.vscode/
+.idea/
+.atom/
+.vs/
+nbproject/
+.dir-locals.el
+.project
+*.sublime-workspace
+*.sublime-project
+*.xcworkspace
+*.xcodeproj
+*.iml
+
+# Python caches
+__pycache__/
+*.py[cod]
+*.so
+*.pyd
+
+# Test and analysis caches
+.pytest_cache/
+.mypy_cache/
+.coverage
+.ruff_cache/
+.tox/
+.nox/
+
+# Virtual environments
+.venv/
+.env/
+venv/
+env/
+
+# Build / packaging artifacts
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# Logs and temp
+cache/
+temp/
+tmp/
+*.sqlite3
+*.sqlite
+*.log
+*.db
+
+# OS cruft
+desktop.ini
+Thumbs.db
+.DS_Store
+
+# Secrets
+secrets.json
+*.env
+*.pem
+*.key
