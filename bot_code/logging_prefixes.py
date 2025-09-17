@@ -1,7 +1,10 @@
+# MIT License
+#
+# Copyright (c) Ethan Kenneth Davies
 """
 Logging prefixes for console output.
 
-Use these constants at the start of each local print statement.
+Use these constants at the start of each local output statement.
 
 - QSTN_LOG -> Waiting for user input
 - INFO_LOG -> Routine information
@@ -12,7 +15,10 @@ Use these constants at the start of each local print statement.
 Each prefix includes ANSI color codes for quick visual recognition.
 """
 
-__all__ = ['QSTN_LOG',
+__version__ = '0.1.0'
+
+__all__ = ['__version__',
+           'QSTN_LOG',
            'INFO_LOG',
            'WARN_LOG',
            'EROR_LOG',
@@ -23,6 +29,7 @@ INFO_LOG = "[ \033[0;32mINFO\033[0m ]"
 WARN_LOG = "[ \033[0;33mWARN\033[0m ]"
 EROR_LOG = "[ \033[0;31mEROR\033[0m ]"
 CRIT_LOG = "[ \033[1;31mCRIT\033[0m ]"
+
 
 if __name__ == "__main__":
     print(QSTN_LOG, INFO_LOG, WARN_LOG, EROR_LOG, CRIT_LOG)

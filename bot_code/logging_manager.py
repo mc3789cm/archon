@@ -1,11 +1,18 @@
+# MIT License
+#
+# Copyright (c) Ethan Kenneth Davies
+__version__ = '0.1.0'
+
 import logging
 
 from .logging_prefixes import *
 
+__all__ = ['__version__', 'LoggingManager']
+
 
 class LoggingManager:
     def __init__(self,
-                 default_log_level: int = 20,
+                 default_log_level: int = None,
                  log_level: int = None,
                  loggers: list = None):
         self.default_logging_level = default_log_level

@@ -1,13 +1,14 @@
 import asyncio
-from time import monotonic
-from os import getenv
 from sys import exit
+from os import getenv
+from time import monotonic
 
 import discord
-from discord.ext.commands import AutoShardedBot
 from discord import app_commands
+from discord.ext.commands import AutoShardedBot
 
 import bot_code
+from bot_code import EmbedManager, EventManager
 from bot_code.logging_prefixes import *
 
 intents = discord.Intents.none()
@@ -26,47 +27,11 @@ bot = AutoShardedBot(
     allowed_mentions=discord.AllowedMentions.none(),
     activity=discord.Activity(type=discord.ActivityType.watching,
                               name="?help"),
-    status=discord.Status.online
-)
+    status=discord.Status.online)
 
 db_mgr = bot_code.DatabaseManager(db_path="./storage/database.sqlite3")
-
-
-# -------
-# Events
-# -------
-@bot.event
-async def on_ready():
-    print(f"{bot.user.name}'s version {bot_code.__version__}")
-    print(f"----------")
-    print(f"{INFO_LOG} Bot user: {bot.user}")
-    print(f"{INFO_LOG} Status: {bot.status}")
-
-    await bot.tree.sync()
-    print(f"{INFO_LOG} Synchronized application commands")
-
-    for shard_id in range(bot.shard_count):
-        print(f"{INFO_LOG} Shard {shard_id} is online")
-    print("----------")
-
-    global eb_mgr
-    eb_mgr = bot_code.EmbedManager(bot_name=bot.user.name)
-
-
-@bot.event
-async def on_guild_join(guild: discord.Guild):
-    await db_mgr.add_guild(guild)
-    for channel in guild.text_channels:
-        if channel.permissions_for(guild.me).send_messages:
-            await channel.send(embed=eb_mgr.join_embed())
-            break
-
-
-@bot.event
-async def on_guild_remove(guild: discord.Guild):
-    await db_mgr.remove_guild(guild)
-
-
+eb_mgr = EmbedManager(bot_name="Archon")
+ev_mgr = EventManager(bot_instance=bot, database_instance=db_mgr, embed_instance=eb_mgr)
 # ----------------
 # Prefix Commands
 # ----------------
@@ -159,7 +124,7 @@ async def start_bot():
     if not token:
         raise RuntimeError(f"{EROR_LOG} DISCORD_TOKEN environment variable is not set.")
     try:
-        bot_code.LoggingManager(default_log_level=30).initialize()
+        bot_code.LoggingManager(default_log_level=30, log_level=30).initialize()
         await db_mgr.initialize()
         await bot.start(token)
     except (KeyboardInterrupt, asyncio.CancelledError):

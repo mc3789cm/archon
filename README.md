@@ -1,5 +1,10 @@
+<!---
+MIT License
+
+Copyright (c) Ethan Kenneth Davies
+--->
 # Archon
-<sup>/ˈɑːr.kɒn/ -> “AR-kon”, "Ark-on", "Ar-chon"</sup><br/>
+<sup>/ˈɑːr.kɒn/ -> “AR-kon”, "Ark-on", "Ar-chon"</sup>
 > [!WARNING]
 > This is still under development, use any source code at your own risk.
 
@@ -9,30 +14,21 @@ I plan to make Archon a kind of *"power-tool"* with multitudes of configuration 
 
 It's up to the user to configure and maintain it. Each module will be disabled by default, no bloat, no unnecessary defaults. Just a blank slate, everything greyed out for the task of whatever configuration you have desired.
 
-## Possible Features
-- Visually customizable dashboard for easy configuration on all your servers
+I do not plan on making any "fun" commands/games. The main idea for this bot is raw utility. Although, this might change, who knows.
 
-Thinking of making the backend for this in [Ruby on Rails](https://rubyonrails.org/).
-
-- Keep as much source-code as openly viewable as securely possible
-- Advanced, user-friendly, and intuitive reaction roles
-
-Inspiration from Tech's [Reaction Roles](https://reactionroles.mtdv.me/) bot.
-
-- Cron jobs/automation of any sorts
-- Logging for almost every event
-
-Events listed at [Readthedocs - API Events](https://discordpy.readthedocs.io/en/latest/api.html#discord-api-events).
-
-- Welcome/leave triggers
-- Leveling system
-- Starboard
-- Embeds
-
+## Planned Features
+- [ ] Website
+  - [ ] Domain name
+  - [ ] Dashboard
+  - [ ] Visual customization/themes
+- [ ] Advanced, user-friendly, and intuitive custom reaction roles</br>
+  Inspiration from Tech's [Reaction Roles](https://reactionroles.mtdv.me/) bot.
+- [ ] Leveling
+- [ ] Starboard
+- [ ] Custom user set embeds</br>
 Inspiration from the Discohook Team's [Discohook Utils](https://discohook.app).
 
-- Much more
-
+Much, much more...
 ## Archon's Philosophy
 Archon's philosophy gravitates alongside that of what the name is relative to - Arch Linux, not just the literal meaning of the word.
 
@@ -40,9 +36,17 @@ And, much like Arch, Archon empowers users through responsibility, offers flexib
 
 Anyway, about the literal meaning of the word. Archon comes from ancient Greek, meaning “ruler” or “magistrate”. In Classical Athens, an archon was a high-ranking official who had administrative, judicial, and sometimes military authority. The term literally conveys leadership, control, and authority.
 
+### Colors
+Primary: #1793D1, rgb(23, 147, 209)<br/>
+Secondary: #1ABC9C, rgb(26, 188, 156)<br/>
+Background: #1E1E1E, rgb(30, 30, 30)<br/>
+
+Primary Text: #ECECEC, rgb(236, 236, 236)<br/>
+Secondary Text: #A0A0A0, rgb(160, 160, 160)<br/>
+
 ## See Also
+- [More Documentation](./bot_code/README.md)
 - [Archon - Wikipedia](https://en.wikipedia.org/wiki/Archon)
 - [Discord.py - Rapptz](https://github.com/Rapptz/discord.py)
-- Discord user: vykefanatic
-
-Add me on Discord if you are interested in contributing, translating, or even just have some suggestions/ideas. I'm open to any and all feedback/criticisms.
+- Discord user: `vykefanatic`</br>
+    Add me on Discord if you are interested in contributing, translating, or even just have some suggestions/ideas. I'm open to any and all feedback/criticisms.
