@@ -22,19 +22,19 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
-import asyncio
-import sys
+__all__ = ['QSTN_LOG',
+           'INFO_LOG',
+           'WARN_LOG',
+           'EROR_LOG']
 
-import bot_code
+QSTN_LOG = "[ \033[1;37mQSTN\033[0m ]"
+"""- QSTN_LOG -> Waiting for user input."""
+INFO_LOG = "[ \033[0;32mINFO\033[0m ]"
+"""- INFO_LOG -> Routine information."""
+WARN_LOG = "[ \033[0;33mWARN\033[0m ]"
+"""- WARN_LOG -> Unexpected, but non-breaking events."""
+EROR_LOG = "[ \033[0;31mEROR\033[0m ]"
+"""- EROR_LOG -> Error that stops a function."""
 
-async def main():
-    try:
-        await bot_code.start_bot()
-
-    except (KeyboardInterrupt, asyncio.CancelledError):
-        print("\033[F\033[F\033[K")
-        await bot_code.stop_bot(bot_instance=bot_code.bot, database_instance=bot_code.db_mgr)
-        sys.exit(0)
-
-if __name__ == '__main__':
-    asyncio.run(main())
+if __name__ == "__main__":
+    print(QSTN_LOG, INFO_LOG, WARN_LOG, EROR_LOG)

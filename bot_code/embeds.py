@@ -1,24 +1,38 @@
-# MIT License
-#
-# Copyright (c) Ethan Kenneth Davies
-__version__ = '0.1.0'
+"""
+The MIT License (MIT)
+
+Copyright (c) 2025 Ethan Kenneth Davies
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+"""
 
 from discord import Embed, User
 
-__all__ = ['__version__', 'EmbedManager']
+__all__ = (
+    'EmbedManager',
+)
 
 
 class EmbedManager:
-    """
-    Manages the return values of all Discord embeds.
-
-    Args:
-        primary_color (str): The hexadecimal primary color code for embeds (default: "#1793d1").
-        error_color (str): The hexadecimal color code for error embeds (default: "#dc143c").
-        bot_name (str): The name of the bot to be used in embed messages (default: "Bot").
-    """
     def __init__(self, primary_color: str = "#1793d1", error_color: str = "#dc143c",
                  bot_name: str = "Bot"):
+
         # Convert hex color strings to integers
         self.primary_color: int = int(primary_color.lstrip("#"), 16)
         self.error_color: int = int(error_color.lstrip("#"), 16)
@@ -41,8 +55,8 @@ class EmbedManager:
             color=int(self.primary_color,)
         ).add_field(
             name="Prefix Commands: (\"?\")",
-            value="`?help` - Displays this help message.\n"
-                  "`?ping` - Outputs {self.bot_name}'s websocket and API latencies in milliseconds (`ms`).",
+            value=f"`?help` - Displays this help message.\n"
+                  f"`?ping` - Outputs {self.bot_name}'s websocket and API latencies in milliseconds (`ms`).",
             inline=False
         ).add_field(
             name="Slash Commands: (\"/\")",
@@ -81,11 +95,18 @@ class EmbedManager:
             color=int(self.primary_color,)
         )
 
-    def error_forbidden(self) -> Embed:
+    def error_client_forbidden(self) -> Embed:
         return Embed(
-            title="Error: Forbidden",
+            title="Error: Client Forbidden",
             description="You do not have the required permissions to run this command.",
             color=int(self.error_color,)
+        )
+
+    def error_server_forbidden(self) -> Embed:
+        return Embed(
+            title="Error: Server Forbidden",
+            description="I do not have the required permissions set. Missing permission(s): `Manage Messages`",
+            color=int(self.error_color)
         )
 
     def error_guild_only(self) -> Embed:

@@ -25,16 +25,23 @@ DEALINGS IN THE SOFTWARE.
 import asyncio
 import sys
 
-import bot_code
+import discord
+from discord.ext import commands
 
-async def main():
-    try:
-        await bot_code.start_bot()
+from .database import *
+from .prefixes import *
 
-    except (KeyboardInterrupt, asyncio.CancelledError):
-        print("\033[F\033[F\033[K")
-        await bot_code.stop_bot(bot_instance=bot_code.bot, database_instance=bot_code.db_mgr)
-        sys.exit(0)
 
-if __name__ == '__main__':
-    asyncio.run(main())
+async def stop_bot(bot_instance: commands.AutoShardedBot, database_instance: DatabaseManager):
+    print(f"{WARN_LOG} Stopping bot...")
+
+    loop = asyncio.get_event_loop()
+
+    if not loop.is_closed():
+        await database_instance.close()
+
+    else:
+        print(f"{WARN_LOG} Database event loop already closed, skipping database closure")
+
+    await bot_instance.close()
+    return 0

@@ -1,7 +1,26 @@
-# MIT License
-#
-# Copyright (c) Ethan Kenneth Davies
-__version__ = '0.1.0'
+"""
+The MIT License (MIT)
+
+Copyright (c) 2025 Ethan Kenneth Davies
+
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+"""
 
 from datetime import datetime
 from typing import Optional
@@ -10,19 +29,22 @@ import discord
 import aiosqlite
 from unidecode import unidecode
 
-from .logging_prefixes import *
+from .prefixes import *
 
-__all__ = ['__version__', 'DatabaseManager']
+__all__ = (
+    'DatabaseManager',
+)
 
 
 class DatabaseManager:
-    def __init__(self, db_path: str = "../storage/database.sqlite3"):
+    def __init__(self, db_path: str):
         self.db_path: str = db_path
         self.db: Optional[aiosqlite.Connection] = None
         self.current_date = datetime.now().strftime("%Y-%m-%d | %H-%M-%S")
 
     async def initialize(self):
         self.db = await aiosqlite.connect(self.db_path)
+
         try:
             await self.db.executescript(
                 """
@@ -40,8 +62,9 @@ class DatabaseManager:
                 );
                 """
             )
+
             await self.db.commit()
-            print(f"{INFO_LOG} Database successfully initialized.")
+            print(f"{INFO_LOG} Database successfully initialized")
 
         except Exception as error:
             await self.db.rollback()
@@ -53,12 +76,14 @@ class DatabaseManager:
                 'INSERT INTO "Statistics" ("Server Name", "Server ID", "Join Date") VALUES (?, ?, ?)',
                 (unidecode(guild.name), guild.id, self.current_date)
             )
+
             await self.db.execute(
                 'INSERT INTO "General Configuration" ("Server ID") VALUES (?)',
                 (guild.id,)
             )
+
             await self.db.commit()
-            print(f"{INFO_LOG} Added guild '{unidecode(guild.name)}' to the database.")
+            print(f"{INFO_LOG} Added guild '{unidecode(guild.name)}' to the database")
 
         except Exception as error:
             await self.db.rollback()
@@ -70,12 +95,14 @@ class DatabaseManager:
                 'DELETE FROM "Statistics" WHERE "Server ID" = ?',
                 (guild.id,)
             )
+
             await self.db.execute(
                 'DELETE FROM "General Configuration" WHERE "Server ID" = ?',
                 (guild.id,)
             )
+
             await self.db.commit()
-            print(f"{INFO_LOG} Removed guild '{unidecode(guild.name)}' from the database.")
+            print(f"{INFO_LOG} Removed guild '{unidecode(guild.name)}' from the database")
 
         except Exception as error:
             await self.db.rollback()
@@ -87,24 +114,16 @@ class DatabaseManager:
                 'UPDATE "General Configuration" SET "Admin Role ID" = ? WHERE "Server ID" = ?',
                 (role.id, guild.id)
             )
+
             await self.db.commit()
-            print(f"{INFO_LOG} Set admin role for '{guild.name}'/({guild.id}).")
+            print(f"{INFO_LOG} Set admin role for '{guild.name}' ({guild.id})")
 
         except Exception as error:
             await self.db.rollback()
-            print(f"{EROR_LOG} Failed to set admin role for '{guild.name}'/({guild.id}): {error}")
+            print(f"{EROR_LOG} Failed to set admin role for '{guild.name}' ({guild.id}): {error}")
 
     async def close(self):
         if self.db:
             await self.db.close()
             self.db = None
-            print(f"{INFO_LOG} Database connection closed.")
-
-
-if __name__ == "__main__":
-    try:
-        from asyncio import run
-        dbm = DatabaseManager()
-        run(dbm.initialize())
-    except KeyboardInterrupt:
-        print(f"{WARN_LOG} Forced shutdown with Ctrl+C.")
+            print(f"{WARN_LOG} Database connection closed")
