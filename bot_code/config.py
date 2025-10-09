@@ -22,27 +22,33 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
-import os
-import sys
 import json
-import dataclasses
+import sys
+import datetime
+from typing import List, Union
 
 import requests
 
+from .exceptions import *
 from .prefixes import *
 
 __all__ = (
-    'config',
+    'VALUES',
 )
 
 
-class ConfigError(Exception):
-    def __init__(self, faulty_key: str, message: str | None):
-        self.faulty_key = faulty_key
-        self.message = message
+def load_json_config(file_path: str = "/opt/archon/etc/discord_bot_config.json"):
+    """Loads and parses the values in the configuration file while testing for exceptions along the way.
 
+    :param file_path: The path to the configuration file.
 
-def load_json_config(file_path: str = "/etc/bot_config.json"):
+    :return: A dictionary of the parsed configuration values loaded from the given JSON file.
+
+    :raise FileNotFoundError:
+    :raise IsADirectoryError:
+    :raise PermissionError:
+    :raise JSONDecodeError: Raised if there is invalid JSON formatting. Subclass of ``ValueError``.
+    """
     try:
         with open(file_path) as config_file:
             return json.load(config_file)
@@ -57,127 +63,186 @@ def load_json_config(file_path: str = "/etc/bot_config.json"):
         raise ConfigError("file_path", message=f"Invalid JSON format: {json_error}")
 
 
-json_config = load_json_config()
+def validate_token(enable_token_validation: bool, token: str):
+    """Checks the authenticatable validity of a Discord token by using the Discord API.
 
+    :param enable_token_validation: Skips token authentication if ``False``. This may be desired if you're completely
+    affirmative with the validity of your token and would like to reduce API overhead and/or risk of getting rate
+    limited by the API.
+    :param token: The actual token used  to authenticate with the Discord API.
 
-def is_token_valid(token: str) -> str:
-    headers = {
-        "Authorization": f"Bot {token}"
-    }
+    :return: ``token``
 
-    response = requests.get(url="https://discord.com/api/v10/users/@me", headers=headers)
+    :raises ConfigError:
+    """
+    if not isinstance(enable_token_validation, bool):
+        raise ConfigError("enable_token_validation", message=f"Must be a boolean (true/false)")
 
-    if response.status_code == 200:
+    if not enable_token_validation:
+        print(f"{WARN_LOG} Skipping token authentication validation")
         return token
 
-    elif response.status_code == 401:
-        raise ConfigError("token", message=f"Token will not connect to Discord API")
+    if enable_token_validation:
+        response = requests.get(url="https://discord.com/api/v10/users/@me", headers={"Authorization": f"Bot {token}"})
 
-    else:
-        print(f"{WARN_LOG} Unexpected response during token authentication: {response.status_code} - {response.text}")
-        raise ConfigError("token", message=None)
+        if response.status_code == 200:
+            return token
+
+        elif response.status_code == 401:
+            raise ConfigError("token", message=f"Token will not connect to the Discord API")
+
+        else:
+            raise ConfigError("token", message=f"Unexpected HTTP response during token authentication: {response.status_code} - {response.text}")
+
+    return None
 
 
-def is_database_path_valid(db_path: str) -> str:
-    if os.path.isdir(db_path):
-        raise ConfigError("database_path", message=f"Cannot access '{db_path}': Is a directory")
+def validate_database_path(database_path: str):
+    """Checks the validity of the database path and database file itself.
 
-    if not os.path.exists(db_path):
-        raise ConfigError("database_path", message=f"Cannot access '{db_path}': No such path")
+    The binary header is read and compared to the binary header of what would be a valid SQLite3 file. If the header is
+    not equal to that of a valid SQLite3, raise ``ConfigError``.
 
+    :param database_path:
+
+    :return: ``database_path``
+
+    :except FileNotFoundError:
+    :except IsADirectoryError:
+    :except PermissionError:
+
+    :raises ConfigError:
+    """
     try:
-        with open(db_path):
-            pass
+        with open(database_path, "rb") as binary_database_file:
+            binary_header = binary_database_file.read(16)
+
+            if binary_header != b'SQLite format 3\x00':
+                raise ConfigError("database_path", message=f"Not an SQLite3 database ({binary_header})")
+
+    except (FileNotFoundError, IsADirectoryError):
+        raise ConfigError("database_path", message=f"'{database_path}' not found or is a directory")
+
     except PermissionError:
-        raise ConfigError("database_path", message=f"Cannot access '{db_path}': Permission denied")
+        raise ConfigError("database_path", message=f"Cannot access '{database_path}': Permission denied")
 
-    return db_path
+    return database_path
 
 
-def is_command_prefix_valid(cmd_prefix: str) -> str:
-    command_prefix_length = len(cmd_prefix)
+def validate_command_prefix(command_prefix: str):
+    """Checks the validity of the command prefix (used in the ``PrefixCommands`` class at ``commands.py``).
 
-    if command_prefix_length >= 3:
-        raise ConfigError("command_prefix", message=f"Command prefix is longer than three characters")
+    If the length of the prefix is greater than ``1``, has whitespace, or is alphanumeric (composed of a letter or
+    number), raise ``ConfigError`` with its respective error message for context.
 
-    if not cmd_prefix.strip():
+    :param command_prefix:
+
+    :return: ``command_prefix``
+
+    :raises ConfigError:
+    """
+    command_prefix_length = len(command_prefix)
+
+    if command_prefix_length > 1:
+        raise ConfigError("command_prefix", message=f"Command prefix is longer than one character")
+
+    if not command_prefix.strip():
         raise ConfigError("command_prefix", message=f"Command prefix cannot be empty or just whitespace")
 
-    if cmd_prefix.isalnum():
+    if command_prefix.isalnum():
         raise ConfigError("command_prefix", message=f"Command prefix should not be a number or letter")
 
-    return cmd_prefix
+    return command_prefix
 
 
-def is_owner_ids_valid(owner_ids: list) -> list:
+def validate_owner_ids(owner_ids: List[Union[int, str, None]]) -> List[int]:
+    """Iterates through each owner id in the list of owner ids (``owner_ids``) and running checks for validity.
+
+    The validity is calculated by ensuring the user id is indeed a Discord id and created within a reasonable timespan.
+
+    -----
+    Discord uses Snowflake IDs, which are 64-bit unsigned integers containing a timestamp. The timestamp portion is the
+    number (milliseconds) since the Discord epoch (2015-01-01).
+
+   1-bit         41-bits              10-bits       12-bits
+    ┌┴┐ ┌────────────┴─────────────┐ ┌───┴────┐ ┌──────┴───────┐
+     0   Timestamp (ms since epoch)   Worker ID     Sequence
+
+    1-bit: Unused/always 0 (sign bit - ensures it's positive).
+
+    41-bits: Milliseconds since Discord epoch.
+
+    10-bits: Internal Discord unique identifier.
+
+    12-bits: Incremented for every ID generated in the same millisecond.
+    -----
+
+    The timestamp is extracted by shifting the snowflake 22 bits to the right. This shifts the top 42 bits into place.
+    Add the Discord epoch to get the real time and convert it to datetime for comparison with date creation validity. If
+    the creation date was in the future (impossible) or created before the Discord epoch (also impossible),
+    ``ConfigError`` will be raised.
+
+    :param owner_ids:
+
+    :return:
+
+    :raises ConfigError:
+    """
+    DISCORD_EPOCH = 1420070400000
+
+    now = datetime.datetime.now(datetime.timezone.utc)
+
+    CUTOFF_DATE = datetime.datetime(2015, 1, 1, tzinfo=datetime.timezone.utc)
+
     for owner_id in owner_ids:
+        # Allows for only one id to be specified in the list, leaving the second (optional) entry as null.
+        if owner_id is None:
+            continue
+
+        if not isinstance(owner_id, (str, int)):
+            raise ConfigError("owner_id", message=f"User IDs must be numeric values in a string or integer, got: {type(owner_id).__name__}")
+
+        owner_id = int(owner_id)
 
         owner_id_length = len(str(owner_id))
 
-        if owner_id_length <= 15 or owner_id_length >= 20:
-            raise ConfigError("owner_ids", message="Owner ID's cannot be shorter than 15 or greater than 20")
+        if not (17 <= owner_id_length <= 20):
+            raise ConfigError("owner_ids", message="User IDs must be between 17 and 20 digits long (inclusive).")
+
+        real_timestamp = (owner_id >> 22) + DISCORD_EPOCH
+
+        creation_date = datetime.datetime.fromtimestamp(real_timestamp / 1000, tz=datetime.UTC)
+
+        if creation_date > now or creation_date < CUTOFF_DATE:
+            raise ConfigError("owner_ids", message="Invalid Discord user ID: unreasonable creation timestamp.")
 
     return owner_ids
 
 
-def is_print_intro_valid(print_intro: bool) -> bool:
+def validate_print_intro(print_intro: bool):
     if not isinstance(print_intro, bool):
-        raise ConfigError("print_intro", message="Print intro must be a boolean")
+        raise ConfigError("print_intro", message="Must be a boolean (true/false)")
 
-    return print_intro
+    else:
+        return print_intro
 
 
-class RawConfigValues:
+class Values:
     def __init__(self):
-        self.TOKEN: str = json_config["token"]
-        self.DB_PATH: str = json_config["database_path"]
-        self.CMD_PREFIX: str = json_config["command_prefix"]
-        self.OWNER_IDS: list = json_config["owner_ids"]
-        self.PRINT_INTRO: bool = json_config["print_intro"]
+        try:
+            json_config = load_json_config()
+
+            self.TOKEN: str = validate_token(json_config["enable_token_validation"], json_config["token"])
+            self.DATABASE_PATH: str = validate_database_path(json_config["database_path"])
+            self.COMMAND_PREFIX: str = validate_command_prefix(json_config["command_prefix"])
+            self.OWNER_IDS: list = validate_owner_ids(json_config["owner_ids"])
+            self.PRINT_INTRO: bool = validate_print_intro(json_config["print_intro"])
+
+        except ConfigError as error:
+            print(f"{EROR_LOG} Invalid configuration: {error.faulty_key}: {error.message}")
+
+            # For POSIX-compliance.
+            sys.exit(78)
 
 
-raw_values = RawConfigValues()
-
-validators = {
-    "token": is_token_valid,
-    "database_path": is_database_path_valid,
-    "command_prefix": is_command_prefix_valid,
-    "owner_ids": is_owner_ids_valid,
-    "print_intro": is_print_intro_valid,
-}
-
-attr_map = {
-    "token": "TOKEN",
-    "database_path": "DB_PATH",
-    "command_prefix": "CMD_PREFIX",
-    "owner_ids": "OWNER_IDS",
-    "print_intro": "PRINT_INTRO",
-}
-
-for key, validator in validators.items():
-    value = getattr(raw_values, attr_map[key])
-    try:
-        validated = validator(value)
-        globals()[attr_map[key]] = validated
-
-    except ConfigError as error:
-        print(f"{EROR_LOG} Invalid configuration: {error.faulty_key}: {error.message}")
-        sys.exit(78)
-
-
-@dataclasses.dataclass
-class Config:
-    TOKEN: str
-    DB_PATH: str
-    CMD_PREFIX: str
-    OWNER_IDS: list
-    PRINT_INTRO: bool
-
-
-config = Config(
-    TOKEN=is_token_valid(raw_values.TOKEN),
-    DB_PATH=is_database_path_valid(raw_values.DB_PATH),
-    CMD_PREFIX=is_command_prefix_valid(raw_values.CMD_PREFIX),
-    OWNER_IDS=is_owner_ids_valid(raw_values.OWNER_IDS),
-    PRINT_INTRO=is_print_intro_valid(raw_values.PRINT_INTRO)
-)
+VALUES = Values()

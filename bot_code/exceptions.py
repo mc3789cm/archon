@@ -22,28 +22,24 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
-__title__ = 'Archon'
-__version__ = '0.1.2'
-__author__ = 'Ethan Kenneth Davies'
-__license__ = 'MIT'
-__copyright__ = 'Copyright (c) 2025 Ethan Kenneth Davies'
-__ARCHON_ASCII__ = [
-    r'      __        _______    ______    __    __     ______    _____  ___   ',
-    r'     /""\      /"      \  /" _  "\  /" |  | "\   /    " \  (\"   \|"  \  ',
-    r'    /    \    |:        |(: ( \___)(:  (__)  :) // ____  \ |.\\   \    | ',
-    r'   /  /\  \   |_____/   ) \/ \      \/      \/ /  /    ) :)|: \.   \\  | ',
-    r'  /  __\'  \   //      /  //  \ _   //  __  \\(: (____/ // |.  \    \. | ',
-    r' /   /  \\  \ |:  __   \ (:   _) \ (:  (  )  :)\        /  |    \    \ | ',
-    r'(___/    \___)|__|  \___) \_______) \__|  |__/  \"_____/    \___|\____\) ',
-]
+__all__ = (
+    'BotError',
+    'ConfigError',
+    'DatabaseError',
+)
 
-from .commands import *
-from .config import *
-from .database import *
-from .embeds import *
-from .events import *
-from .exceptions import *
-from .prefixes import *
-from .set_logging import *
-from .start import *
-from .stop import *
+
+class BotError(Exception):
+    def __init__(self):
+        pass
+
+
+class ConfigError(BotError):
+    def __init__(self, faulty_key: str, message: str):
+        self.faulty_key = faulty_key
+        self.message = message
+
+
+class DatabaseError(BotError):
+    def __init__(self, message: str):
+        self.message = message
