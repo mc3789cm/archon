@@ -25,11 +25,11 @@ DEALINGS IN THE SOFTWARE.
 from discord import Embed, User
 
 __all__ = (
-    'EmbedManager',
+    'Embeds',
 )
 
 
-class EmbedManager:
+class Embeds:
     def __init__(self, primary_color: str = "#1793d1", error_color: str = "#dc143c",
                  bot_name: str = "Bot"):
 

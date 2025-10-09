@@ -30,14 +30,14 @@ from .config import *
 from .database import *
 from .embeds import *
 from .events import *
+from .exceptions import *
 from .prefixes import *
 from .set_logging import *
-from .stop import *
 
 __all__ = (
     'start_bot',
-    'db_mgr',
-    'bot',
+    'default_bot',
+    'default_database',
 )
 
 intents = discord.Intents.none()
@@ -46,10 +46,11 @@ intents.members = True
 intents.message_content = True
 intents.messages = True
 
-bot = commands.AutoShardedBot(
-    owner_ids=config.OWNER_IDS,
+# AutoShardedBot is used for better scaling.
+default_bot = commands.AutoShardedBot(
+    owner_ids=VALUES.OWNER_IDS,
     intents=intents,
-    command_prefix=config.CMD_PREFIX,
+    command_prefix=VALUES.COMMAND_PREFIX,
     case_insensitive=True,
     help_command=None,
     allowed_mentions=discord.AllowedMentions.none(),
@@ -57,28 +58,36 @@ bot = commands.AutoShardedBot(
     status=discord.Status.online
 )
 
-db_mgr = DatabaseManager(config.DB_PATH)
+default_database = Database()
 
-eb_mgr = EmbedManager(bot_name="Archon")
+embeds_default = Embeds()
 
 
-async def start_bot(bot_instance: commands.AutoShardedBot = bot, database_instance: DatabaseManager = db_mgr):
+async def start_bot(bot_instance: commands.AutoShardedBot = default_bot, database_instance: Database = default_database,
+                    embeds_instance: Embeds = embeds_default):
     set_logging(log_level=30, default_log_level=20)
 
     print(f"{INFO_LOG} Starting bot...")
 
-    prefix_cmd_mgr = PrefixCommandsManager(bot_instance=bot_instance,
-                                           embed_instance=eb_mgr,
-                                           database_instance=db_mgr)
+    prefix_cmds = PrefixCommands(bot_instance=bot_instance,
+                                 embed_instance=embeds_instance,
+                                 database_instance=database_instance)
 
-    slash_cmd_mgr = SlashCommandsManager(bot_instance=bot_instance,
-                                         embed_instance=eb_mgr,
-                                         database_instance=db_mgr)
-    await db_mgr.initialize()
-    await bot_instance.add_cog(slash_cmd_mgr)
+    slash_cmds = SlashCommands(bot_instance=bot_instance,
+                               embed_instance=embeds_instance,
+                               database_instance=database_instance)
 
-    ev_mgr = EventManager(bot_instance=bot_instance,
-                          embed_instance=eb_mgr,
-                          database_instance=db_mgr)
+    events = Events(bot_instance=bot_instance,
+                    embed_instance=embeds_instance,
+                    database_instance=database_instance)
 
-    await bot_instance.start(config.TOKEN)
+    try:
+        async with database_instance as db:
+            await db.create_db()
+
+    except DatabaseError as error:
+        print(f"{EROR_LOG} {error}")
+
+    await bot_instance.add_cog(slash_cmds)
+
+    await bot_instance.start(VALUES.TOKEN)

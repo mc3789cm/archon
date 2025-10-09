@@ -1,0 +1,11 @@
+{
+  "token": "token here",
+  "enable_token_validation": false,
+  "database_path": "/opt/archon/var/db/database.sqlite3",
+  "owner_ids": [
+    1234567891234567890,
+    null
+  ],
+  "command_prefix": "! or ? or $",
+  "print_intro": true
+}

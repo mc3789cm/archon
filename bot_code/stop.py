@@ -22,26 +22,24 @@ FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 """
 
-import asyncio
-import sys
+__all__ = (
+    'stop_bot',
+)
 
-import discord
+from sys import exit
 from discord.ext import commands
 
 from .database import *
 from .prefixes import *
 
 
-async def stop_bot(bot_instance: commands.AutoShardedBot, database_instance: DatabaseManager):
-    print(f"{WARN_LOG} Stopping bot...")
-
-    loop = asyncio.get_event_loop()
-
-    if not loop.is_closed():
-        await database_instance.close()
-
-    else:
-        print(f"{WARN_LOG} Database event loop already closed, skipping database closure")
+async def stop_bot(bot_instance: commands.AutoShardedBot, database_instance: Database):
+    if bot_instance.is_closed():
+        print(f"{INFO_LOG} Bot is already closed.")
+        return
 
     await bot_instance.close()
-    return 0
+
+    await database_instance.__aexit__(None, None, None)
+
+    exit(0)

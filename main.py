@@ -23,18 +23,53 @@ DEALINGS IN THE SOFTWARE.
 """
 
 import asyncio
-import sys
+import signal
 
-import bot_code
+import bot_code as bc
+
+
+async def print_intro(run_print_intro: bool = bc.VALUES.PRINT_INTRO):
+    """Prints the program intro ASCII and metadata if enabled in config."""
+    if not run_print_intro:
+        return
+
+    print(bc.__title__, bc.__version__)
+
+    await asyncio.sleep(0.25)
+
+    for line in bc.__ARCHON_ASCII__:
+        print(line)
+        await asyncio.sleep(0.25)
+
+    print(bc.__copyright__)
+
 
 async def main():
+    await print_intro()
+
+    loop = asyncio.get_running_loop()
+
+    stop_event = asyncio.Event()
+
+    def shutdown():
+        print(f"{bc.WARN_LOG} Received shutdown signal...")
+        stop_event.set()
+
+    for sig in (signal.SIGINT, signal.SIGTERM):
+        loop.add_signal_handler(sig, shutdown)
+
     try:
-        await bot_code.start_bot()
+        await bc.start_bot()
+        await stop_event.wait()
+    except KeyboardInterrupt:
+        print(f"{bc.WARN_LOG} Received KeyboardInterrupt")
+    finally:
+        await bc.stop_bot(bot_instance=bc.default_bot, database_instance=bc.default_database)
+        print(f"{bc.INFO_LOG} Shutdown complete.")
 
-    except (KeyboardInterrupt, asyncio.CancelledError):
-        print("\033[F\033[F\033[K")
-        await bot_code.stop_bot(bot_instance=bot_code.bot, database_instance=bot_code.db_mgr)
-        sys.exit(0)
 
-if __name__ == '__main__':
-    asyncio.run(main())
+if __name__ == "__main__":
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        pass

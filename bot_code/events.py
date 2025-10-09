@@ -27,30 +27,28 @@ from discord.ext.commands import AutoShardedBot
 
 from .database import *
 from .embeds import *
+from .exceptions import *
 from .prefixes import *
 
 __all__ = (
-    'EventManager',
+    'Events',
 )
 
 
-class EventManager:
-    def __init__(self,
-                 bot_instance: AutoShardedBot,
-                 database_instance: DatabaseManager,
-                 embed_instance: EmbedManager):
+class Events:
+    def __init__(self, bot_instance: AutoShardedBot, database_instance: Database, embed_instance: Embeds):
         self.bot = bot_instance
-        self.db_mgr = database_instance
-        self.eb_mgr = embed_instance
+        self.database = database_instance
+        self.embeds = embed_instance
 
         events = [self.on_ready, self.on_guild_join, self.on_guild_remove]
 
+        # Register each method as an event
         for event in events:
             self.bot.add_listener(event)
 
     async def on_ready(self):
         print(f"----------")
-
         print(f"{INFO_LOG} Bot user: {self.bot.user}")
         print(f"{INFO_LOG} Status: {self.bot.status}")
 
@@ -59,17 +57,31 @@ class EventManager:
 
         for shard_id in range(self.bot.shard_count):
             print(f"{INFO_LOG} Shard {shard_id} is online")
-
         print("----------")
 
     async def on_guild_join(self, guild: discord.Guild):
-        await self.db_mgr.add_guild(guild)
+        try:
+            async with self.database as db:
+                await db.add_guild(guild)
+
+                print(f"{INFO_LOG} Added guild '{guild.name}' to the database")
+
+        except DatabaseError as error:
+            print(f"{EROR_LOG} {error}")
 
         for channel in guild.text_channels:
 
             if channel.permissions_for(guild.me).send_messages:
-                await channel.send(embed=self.eb_mgr.join_embed())
+                await channel.send(embed=self.embeds.join_embed())
+
                 break
 
     async def on_guild_remove(self, guild: discord.Guild):
-        await self.db_mgr.remove_guild(guild)
+        try:
+            async with self.database as db:
+                await db.delete_guild(guild)
+
+                print(f"{INFO_LOG} Removed guild '{guild.name}' from the database")
+
+        except DatabaseError as error:
+            print(f"{EROR_LOG} {error}")
