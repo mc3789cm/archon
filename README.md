@@ -64,6 +64,7 @@ But, for now, we'll just have to install manually.
 
 ### Prerequisites:
 *Make* sure you have:
+- `sqlite3`
 - `make`
 - `Python`
     Might work with older versions, but try to use version 3.13.7 or newer.
