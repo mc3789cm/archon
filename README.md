@@ -159,7 +159,7 @@ archon
 
 Or just use sudo:
 ```bash
-sudo Archon
+sudo archon
 ```
 
 ## Planned Features
