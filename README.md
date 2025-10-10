@@ -152,7 +152,7 @@ A symlink to the executable in `/opt` should be present in PATH, but you need to
 
 Use the `archon` group (recommended):
 ```bash
-sudo usermod -aG archon your username
+sudo usermod -aG archon your-username
 
 archon
 ```
