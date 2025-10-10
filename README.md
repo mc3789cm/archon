@@ -147,6 +147,21 @@ sudo make install
 sudo make uninstall
 ```
 
+### Execution:
+A symlink to the executable in `/opt` should be present in PATH, but you need to add yourself to the `archon` group, or execute Archon with sudo.
+
+Use the `archon` group (recommended):
+```bash
+sudo usermod -aG archon your username
+
+archon
+```
+
+Or just use sudo:
+```bash
+sudo Archon
+```
+
 ## Planned Features
 - [ ] Website
   - [ ] Domain name
@@ -201,4 +216,4 @@ feedback/criticisms.
 
 ## License
 
-MIT License. See [`LICENSE.md`](./LICENSE).
+MIT License. See [`LICENSE`](./LICENSE).
