@@ -129,11 +129,11 @@ mv ./example.discord_bot_config.json discord_bot_config.json
 ```
 
 ### Compile into an Executable:
-The source code is packaged along with its dependencies and standalone Python
-interpreter into a standalone executable.
+The source code is packaged along with its dependencies and Python interpreter
+into a standalone executable.
 
 This means you don't need to keep Python (or make) installed in your system 
-after installation.
+after installation (make is still required for uninstallation).
 ```bash
 make build
 ```
