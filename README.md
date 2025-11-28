@@ -215,6 +215,8 @@ Add me on Discord if you are interested in contributing, translating, or
 even just have some suggestions/ideas. I'm open to any and all
 feedback/criticisms.
 
+Malloc. Malice. Malaise. Malign. Malinger. Malaria. Malkin. Malcontent. Malevolent. Malloc.
+
 ## License
 
 MIT License. See [`LICENSE`](./LICENSE).
